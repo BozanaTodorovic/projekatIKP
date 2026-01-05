@@ -1,0 +1,23 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "ServerApp\\ServerApp.vcxproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "ServiceApp\\ServiceApp.vcxproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "PublisherApp\\PublisherApp.vcxproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "SubscriberApp\\SubscriberApp.vcxproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
