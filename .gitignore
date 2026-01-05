@@ -1,0 +1,11 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/Quiz/.vs/Quiz
+/Quiz/Common/x64/Debug
+/Quiz/PublisherApp/x64/Debug
+/Quiz/ServerApp/x64/Debug
+/Quiz/ServiceApp/x64/Debug
+/Quiz/SubscriberApp/x64/Debug
+/Quiz/x64/Debug
