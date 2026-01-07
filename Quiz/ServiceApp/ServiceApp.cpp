@@ -1,170 +1,8 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <iostream>
-#include <cstring>
-#include "../Common/protocol.h"
-#include "../Common/net.h"
 
+#include "ServiceUtils.h"
 #pragma comment(lib, "Ws2_32.lib")
 
-// =================== Include prethodne definicije ===================
-
-struct CorrectAnswer {
-    int questionId;
-    int correctOption;
-};
-
-struct RingBuffer {
-    CorrectAnswer* buffer;
-    size_t capacity;
-    size_t start = 0;
-    size_t size = 0;
-
-    RingBuffer(size_t cap) : capacity(cap) { buffer = new CorrectAnswer[cap]; }
-    ~RingBuffer() { delete[] buffer; }
-
-    void push(const CorrectAnswer& ca) {
-        buffer[(start + size) % capacity] = ca;
-        if (size < capacity) size++;
-        else start = (start + 1) % capacity;
-    }
-
-    bool get(int questionId, int& correctOption) {
-        for (size_t i = 0; i < size; i++) {
-            size_t idx = (start + i) % capacity;
-            if (buffer[idx].questionId == questionId) {
-                correctOption = buffer[idx].correctOption;
-                return true;
-            }
-        }
-        return false;
-    }
-};
-
-struct SubResult {
-    int subscriberId;
-    int score;
-    SubResult* next;
-};
-
-struct HashMap {
-    SubResult** buckets;
-    size_t capacity;
-
-    HashMap(size_t cap) : capacity(cap) {
-        buckets = new SubResult * [cap];
-        for (size_t i = 0; i < cap; i++) buckets[i] = nullptr;
-    }
-
-    ~HashMap() {
-        for (size_t i = 0; i < capacity; i++) {
-            SubResult* curr = buckets[i];
-            while (curr) { SubResult* tmp = curr; curr = curr->next; delete tmp; }
-        }
-        delete[] buckets;
-    }
-
-    size_t hash(int subscriberId) { return subscriberId % capacity; }
-
-    void addOrUpdate(int subscriberId, int points) {
-        size_t idx = hash(subscriberId);
-        SubResult* curr = buckets[idx];
-        while (curr) {
-            if (curr->subscriberId == subscriberId) { curr->score += points; return; }
-            curr = curr->next;
-        }
-        SubResult* newSub = new SubResult{ subscriberId, points, buckets[idx] };
-        buckets[idx] = newSub;
-    }
-
-    void printAll() {
-        for (size_t i = 0; i < capacity; i++) {
-            SubResult* curr = buckets[i];
-            while (curr) { std::cout << "Sub " << curr->subscriberId << " -> " << curr->score << " pts\n"; curr = curr->next; }
-        }
-    }
-};
-
-struct QuizResultNode {
-    int quizId;
-    HashMap* subResults;
-    RingBuffer* correctAnswers;
-    QuizResultNode* next;
-};
-
-QuizResultNode* allQuizzes = nullptr;
-
-QuizResultNode* getOrCreateQuiz(int quizId) {
-    QuizResultNode* curr = allQuizzes;
-    while (curr) { if (curr->quizId == quizId) return curr; curr = curr->next; }
-    QuizResultNode* newQuiz = new QuizResultNode;
-    newQuiz->quizId = quizId;
-    newQuiz->subResults = new HashMap(100);
-    newQuiz->correctAnswers = new RingBuffer(100);
-    newQuiz->next = allQuizzes;
-    allQuizzes = newQuiz;
-    return newQuiz;
-}
-
-void addCorrectAnswer(const char* payload) {
-    const char* line = payload;
-    while (*line) {
-        int quizId = 0, qId = 0, correctAnswer = 0;
-        int n = 0;
-        sscanf_s(line, "%d|%d|%d%n", &quizId, &qId, &correctAnswer, &n);
-        line += n; 
-        if (*line == '\n') line++;
-        QuizResultNode* quiz = getOrCreateQuiz(quizId);
-        CorrectAnswer ca{ qId, correctAnswer };
-        quiz->correctAnswers->push(ca);
-        //std::cout << "Dodat tacan odgovor " << correctAnswer << " for qID " << qId << ":\n";
-
-    }
-}
-
-void processQuizAnswer(int quizId, const char* payload) {
-    QuizResultNode* quiz = getOrCreateQuiz(quizId);
-    const char* line = payload;
-    int subId = 0, qId = 0, answer = 0;
-    int n = 0;
-    int correctOption; int points = 0;
-    while (*line) {
-        sscanf_s(line, "%d|%d|%d|%d%n", &subId, &quizId, &qId, &answer, &n);
-        if (quiz->correctAnswers->get(qId, correctOption)) {
-            if (answer == correctOption) points = 2;
-        }
-        std::cout << "Question points for qID is " << qId << "\n";
-        quiz->subResults->addOrUpdate(subId, points);
-        line += n; if (*line == '\n') line++;
-    }
-    std::cout << "[QUIZ "<<quizId<<"]->Updated scores for subID "<<subId<<" is " << points << ":\n";
-    quiz->subResults->printAll();
-}
-
-void sendQuizResult(SOCKET sock, int quizId) {
-    QuizResultNode* quiz = allQuizzes;
-    while (quiz) {
-        if (quiz->quizId == quizId) break;
-        quiz = quiz->next;
-    }
-    if (!quiz) return; // nema kviza
-
-    char msg[128];
-
-    for (size_t i = 0; i < quiz->subResults->capacity; i++) {
-        SubResult* curr = quiz->subResults->buckets[i];
-        while (curr) {
-            // Formiraj payload: "subscriberId|quizId|score"
-            snprintf(msg, sizeof(msg), "%d|%d|%d",curr->subscriberId, quizId, curr->score);
-            sendMsg(sock, MsgType::QUIZ_RESULT, msg, (uint32_t)strlen(msg));
-            std::cout << "Poslat jedan rez" << std::endl;
-            curr = curr->next;
-        }
-    }
-}
-
-// ===================== Main =====================
 int main() {
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) return 1;
@@ -181,30 +19,7 @@ int main() {
 
     std::cout << "Service connected to server!\n";
 
-    // Za test: dodajmo neke tacne odgovore
-    /*addCorrectAnswer(1, 1, 2);
-    addCorrectAnswer(1, 2, 0);
-    addCorrectAnswer(1, 3, 1);
-    */
-    // Glavna petlja primanja poruka
-    /*while (true) {
-        MsgType type;
-        char payload[1024]{};
-        uint32_t len = 0;
-
-        if (!recvMsg(sock, type, payload, sizeof(payload) - 1, len)) break;
-        payload[len] = '\0';
-
-        switch (type) {
-        case MsgType::PING: std::cout << "PING received\n"; break;
-        case MsgType::QUIZ_ANSWER:
-            std::cout << "QUIZ_ANSWER received\n";
-            processQuizAnswer(1, payload);
-            break;
-        default:
-            std::cout << "Unknown MsgType: " << (uint16_t)type << "\n";
-        }
-    }*/
+    
     while (true) {
         MsgType type;
         char payload[1024]{};
@@ -251,7 +66,6 @@ int main() {
         }
         }
     }
-
 
 
     std::cin.get();

@@ -22,11 +22,11 @@ void splitQuizMessage(const char* msg, char parts[7][256]) {
             parts[partIndex][charIndex] = '\0';
             partIndex++;
             charIndex = 0;
-            if (partIndex >= 7) break; // imamo 7 delova: quizId, qId, text, 4 options
+            if (partIndex >= 7) break; //have 7 parts: quizId, qId, text, 4 questions
         }
         else {
             parts[partIndex][charIndex++] = msg[i];
-            if (charIndex >= 255) charIndex = 255; // spre?ava overflow
+            if (charIndex >= 255) charIndex = 255; //  overflow
         }
     }
     parts[partIndex][charIndex] = '\0';
