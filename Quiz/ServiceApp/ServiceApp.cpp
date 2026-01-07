@@ -113,11 +113,12 @@ void addCorrectAnswer(const char* payload) {
         int quizId = 0, qId = 0, correctAnswer = 0;
         int n = 0;
         sscanf_s(line, "%d|%d|%d%n", &quizId, &qId, &correctAnswer, &n);
-        line += n; if (*line == '\n') line++;
+        line += n; 
+        if (*line == '\n') line++;
         QuizResultNode* quiz = getOrCreateQuiz(quizId);
         CorrectAnswer ca{ qId, correctAnswer };
         quiz->correctAnswers->push(ca);
-        std::cout << "Dodat tacan odgovor" << correctAnswer << " for qID" << qId << ":\n";
+        //std::cout << "Dodat tacan odgovor " << correctAnswer << " for qID " << qId << ":\n";
 
     }
 }
@@ -125,23 +126,43 @@ void addCorrectAnswer(const char* payload) {
 void processQuizAnswer(int quizId, const char* payload) {
     QuizResultNode* quiz = getOrCreateQuiz(quizId);
     const char* line = payload;
+    int subId = 0, qId = 0, answer = 0;
+    int n = 0;
+    int correctOption; int points = 0;
     while (*line) {
-        int subId = 0, qId = 0, answer = 0;
-        int n = 0;
         sscanf_s(line, "%d|%d|%d|%d%n", &subId, &quizId, &qId, &answer, &n);
-        int correctOption; int points = 0;
         if (quiz->correctAnswers->get(qId, correctOption)) {
             if (answer == correctOption) points = 2;
         }
-        std::cout << "Question points for qID is" << qId << ":\n";
+        std::cout << "Question points for qID is " << qId << "\n";
         quiz->subResults->addOrUpdate(subId, points);
         line += n; if (*line == '\n') line++;
     }
-    std::cout << "Updated scores for quiz " << quizId << ":\n";
+    std::cout << "[QUIZ "<<quizId<<"]->Updated scores for subID "<<subId<<" is " << points << ":\n";
     quiz->subResults->printAll();
 }
 
+void sendQuizResult(SOCKET sock, int quizId) {
+    QuizResultNode* quiz = allQuizzes;
+    while (quiz) {
+        if (quiz->quizId == quizId) break;
+        quiz = quiz->next;
+    }
+    if (!quiz) return; // nema kviza
 
+    char msg[128];
+
+    for (size_t i = 0; i < quiz->subResults->capacity; i++) {
+        SubResult* curr = quiz->subResults->buckets[i];
+        while (curr) {
+            // Formiraj payload: "subscriberId|quizId|score"
+            snprintf(msg, sizeof(msg), "%d|%d|%d",curr->subscriberId, quizId, curr->score);
+            sendMsg(sock, MsgType::QUIZ_RESULT, msg, (uint32_t)strlen(msg));
+            std::cout << "Poslat jedan rez" << std::endl;
+            curr = curr->next;
+        }
+    }
+}
 
 // ===================== Main =====================
 int main() {
@@ -196,23 +217,38 @@ int main() {
         payload[len] = '\0';
         switch (type)
         {
-        case MsgType::PING:
+        case MsgType::PING:{
             std::cout << "[SERVICE] Got PING\n";
             break;
-        case MsgType::QUIZ_START:
+        }
+        case MsgType::QUIZ_START: {
             std::cout << "[SERVICE] Quiz started!\n";
             break;
-        case MsgType::CORRECT_ANSWER:
-            std::cout << "[SERVICE] Correct answer: " << payload << "\n";
+        }
+        case MsgType::CORRECT_ANSWER:{
+            //std::cout << "[SERVICE] Correct answer: " << payload << "\n";
+            std::cout << "[SERVICE] Correct answer loaded \n"<<std::endl;
             addCorrectAnswer(payload);
             break;
-        case MsgType::QUIZ_ANSWER:
+        }case MsgType::QUIZ_ANSWER: {
             std::cout << "[SERVICE] Received answer: " << payload << "\n";
-            processQuizAnswer(1, payload);
+            int subId = 0, qId = 0, answer = 0;
+            int n = 0, quizId = 0;
+            sscanf_s(payload, "%d|%d|%d|%d", &subId, &quizId, &qId, &answer, &n);
+            processQuizAnswer(quizId, payload);
             break;
-        default:
+        }
+        case MsgType::QUIZ_END: {
+            int quiId = 0;
+            sscanf_s(payload, "%d", &quiId);
+            sendQuizResult(sock,quiId);
+            std::cout << "[SERVICE] Quiz "<< quiId <<" ended! \n";
+            break;
+        }
+        default: {
             std::cout << "[SERVICE] Unknown message type: " << (uint16_t)type << "\n";
             break;
+        }
         }
     }
 

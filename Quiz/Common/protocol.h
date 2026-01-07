@@ -21,12 +21,9 @@ enum class MsgType : uint16_t {
     QUIZ_END = 34,
     CORRECT_ANSWER = 35,
     QUIZ_LIST = 36,
+    QUIZ_RESULT=37,
+    QUIZ_WAIT_RESULT = 38,
 
     DISCONNECT = 40,
-    // kasnije:
-    // CREATE_QUIZ = 10,
-    // REGISTER = 11,
-    // QUIZ_START = 12,
-    // SUBMIT = 13,
-    // RESULTS = 14
+
 };

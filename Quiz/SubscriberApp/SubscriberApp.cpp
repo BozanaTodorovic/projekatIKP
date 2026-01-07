@@ -1,4 +1,5 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
+#define NOMINMAX
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iostream>
@@ -6,6 +7,7 @@
 #include <cstring>
 #include <sstream>
 #include <mutex>
+#include <limits>
 
 std::mutex qMutex;
 
@@ -30,7 +32,11 @@ void splitQuizMessage(const char* msg, char parts[7][256]) {
     parts[partIndex][charIndex] = '\0';
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    int subId = 0;
+    if(argc>1){
+        subId = std::atoi(argv[1]);
+    }
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
         std::cout << "WSAStartup failed\n";
@@ -72,7 +78,7 @@ int main() {
             std::cin >> selectedQuiz;
 
             char buf[32];
-            int subscriberId = 42;
+            int subscriberId =subId;
             sprintf_s(buf, "%d %d", selectedQuiz, subscriberId);
             sendMsg(sock, MsgType::REGISTER, buf, (uint32_t)strlen(buf));
         }
@@ -118,7 +124,7 @@ int main() {
 
             int zeroBased = answer;
             char buf[32];
-            int subscriberId = 42;
+            int subscriberId = subId;
             sprintf_s(buf, "%d", answer);
             sendMsg(sock,
                 MsgType::QUIZ_ANSWER,
@@ -134,12 +140,27 @@ int main() {
                 ans.c_str(),
                 (uint32_t)ans.size());
         }
+        else if (type == MsgType::QUIZ_RESULT) {
+            std::cout << "[SUBSCRIBER] Quiz result \n";
+            int subId = 0, quizId = 0, score = 0;
+            sscanf_s(buf, "%d|%d|%d", &subId, &quizId, &score);
+            std::cout << "Your result for quiz " << quizId << " is : " << score << std::endl;
+        }
+        else if (type == MsgType::QUIZ_WAIT_RESULT) {
+            std::cout << "[SUBSCRIBER] Wait result...\n";
+        }
         else if (type == MsgType::QUIZ_END) {
             std::cout << "[SUBSCRIBER] Quiz ended!\n";
-            quizRunning = false;
+            quizRunning = false; 
         }
     }
+   
+    std::cout << "Press ENTER to exit...\n";
+    //ucita nam enter iz bafera pa onda prodje cin.get i ugasi window
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cin.get();
+
     closesocket(sock);
     WSACleanup();
+    return 0;
 }
