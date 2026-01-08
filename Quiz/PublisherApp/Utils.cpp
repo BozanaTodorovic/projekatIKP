@@ -2,8 +2,8 @@
 
 void setQuizes(Quizes array[3]) {
     Quizes quiz1 = {
-    "OpsteZnanje", // topic
-    {   // questions[]
+    "OpsteZnanje",
+    {
         {1, "Koji je glavni grad Srbije?", {"Beograd","Nis","Novi Sad","Kragujevac"}, 1},
         {2, "Koliko planeta ima Suncev sistem?", {"7","8","9","10"}, 2},
         {3, "Koja boja nastaje mesanjem plave i zute?", {"Crvena","Zelena","Plava","Zuta"}, 2}

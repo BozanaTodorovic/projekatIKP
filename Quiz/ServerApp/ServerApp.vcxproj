@@ -123,12 +123,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Handlers.cpp" />
+    <ClCompile Include="HashMap.cpp" />
     <ClCompile Include="ServerApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
       <Project>{837635a4-1c96-42fd-b133-e76e0520a066}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Handlers.h" />
+    <ClInclude Include="HashMap.h" />
+    <ClInclude Include="QuizStruct.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

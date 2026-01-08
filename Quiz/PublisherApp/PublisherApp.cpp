@@ -34,25 +34,26 @@ int main() {
     Quizes q[3];
     setQuizes(q);
     for (int i = 0;i < 3;i++) {
-        std::cout << q[i].topic << std::endl;
-        std::cout << q[i].questions->text << std::endl;
+
         char payload[256]{};
 
-        sprintf_s(payload, sizeof(payload), "%d %d %d %s", i+1, 20, 30, q[i].topic);
+        sprintf_s(payload, sizeof(payload), "%d %d %s", 20, 30, q[i].topic);
         sendMsg(sock, MsgType::CREATE_QUIZ, payload, (uint32_t)strlen(payload));
         MsgType type;
         char buf[256]{};
+        int quizId = 0;
         uint32_t len = 0;
         if (recvMsg(sock, type, buf, sizeof(buf) - 1, len)) {
             buf[len] = '\0';
             std::cout << "Publisher got CREATE_QUIZ response: type="
                 << (uint16_t)type << " payload=" << buf << "\n";
+            sscanf_s(buf, "%d", &quizId);
         }
         int quiz1Count = 3;
 
 
         for (int j = 0; j < quiz1Count; j++) {
-            sendQuestion(sock, i+1, q[i].questions[j]);
+            sendQuestion(sock, quizId, q[i].questions[j]);
         }
     }
 
