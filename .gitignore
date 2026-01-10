@@ -2,10 +2,30 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
+# Visual Studio internal
 /Quiz/.vs/Quiz
+
+# Existing project Debug folders
 /Quiz/Common/x64/Debug
 /Quiz/PublisherApp/x64/Debug
 /Quiz/ServerApp/x64/Debug
 /Quiz/ServiceApp/x64/Debug
 /Quiz/SubscriberApp/x64/Debug
 /Quiz/x64/Debug
+
+# === Stress test applications ===
+/Quiz/StressTestApp/x64/Debug
+/Quiz/StressTestPublisherApp/x64/Debug
+
+# === Visual Studio user-specific files ===
+**/*.vcxproj.user
+
+# === Generic build artifacts (safe to ignore) ===
+**/*.tlog
+**/*.obj
+**/*.pdb
+**/*.ilk
+**/*.idb
+**/*.log
+**/*.recipe
+**/*.FileListAbsolute.txt
