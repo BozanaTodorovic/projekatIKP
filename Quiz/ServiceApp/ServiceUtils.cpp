@@ -24,7 +24,7 @@ void addCorrectAnswer(const char* payload) {
         QuizResultNode* quiz = getOrCreateQuiz(quizId);
         CorrectAnswer ca{ qId, correctAnswer };
         quiz->correctAnswers->push(ca);
-        std::cout << "Dodat tacan odgovor " << correctAnswer << " for qID " << qId << ":\n";
+        //std::cout << "Dodat tacan odgovor " << correctAnswer << " for qID " << qId << ":\n";
 
     }
 }

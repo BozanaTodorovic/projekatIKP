@@ -33,6 +33,7 @@ struct Quiz {
     char topic[MAX_TOPIC_LEN];
     QuizStatus status;
     time_t registrationDeadline;
+    time_t quizEndTime;
     int quizDurationSeconds;
 
     Question questions[MAX_QUESTIONS];

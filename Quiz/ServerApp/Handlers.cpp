@@ -1,5 +1,6 @@
 ﻿#include "Handlers.h"
 #include <iostream>
+#include <chrono>
 
 HashMap subscriberMap;
 SOCKET g_serviceSock = INVALID_SOCKET;
@@ -49,7 +50,7 @@ void createQuiz(int quizId, int regDurationSec, int quizDurationSec, const char*
 
     allQuizzes.push(q);
 
-    std::cout << "[SERVER] Quiz " << quizId << " created\n";
+    std::cout << "\n[SERVER] Quiz " << quizId << " created\n";
 }
 
 bool registerSubscriber(int quizId, int subId, SOCKET sock) {
@@ -68,7 +69,7 @@ bool registerSubscriber(int quizId, int subId, SOCKET sock) {
     quiz->subscribers[quiz->subscriberCount++] = sub;
     subscriberMap.insert(subId, sub);
 
-    std::cout << "[SERVER] Subscriber " << subId << " registered to quiz " << quizId << "\n";
+    std::cout << "\n\n[SERVER] Subscriber " << subId << " registered to quiz " << quizId << "\n";
     return true;
 }
 
@@ -85,12 +86,20 @@ bool addQuestionToQuiz(int quizId, const Question& q) {
 
 void startQuiz(Quiz& q) {
     q.status = QUIZ_RUNNING;
-    std::cout << "[SERVER] Quiz " << q.quizId << " STARTED\n";
-
+    std::cout <<"\n[SERVER] Quiz " << q.quizId << " STARTED";
     for (int i = 0; i < q.subscriberCount; i++) {
         sendMsg(q.subscribers[i].sock, MsgType::QUIZ_START, nullptr, 0);
     }
 }
+void endQuiz(Quiz& q) {
+    q.status = QUIZ_FINISHED;
+    std::cout << "[SERVER] Quiz " << q.quizId << " ENDED\n\n" << std::endl;
+
+    for (int i = 0; i < q.subscriberCount; i++) {
+        sendMsg(q.subscribers[i].sock, MsgType::QUIZ_WAIT_RESULT, nullptr, 0);
+    }
+}
+
 
 void quizTimerThread() {
     while (true) {
@@ -101,11 +110,29 @@ void quizTimerThread() {
             Quiz& q = allQuizzes.buffer[idx];
             //std::cout << "Broj subscribera za kviz "<<q.quizId <<" je " << q.subscriberCount << std::endl;
             if (q.status == QUIZ_OPEN && time(nullptr) > q.registrationDeadline && q.subscriberCount > 0) {
+                q.quizEndTime = time(nullptr) + q.quizDurationSeconds;
                 startQuiz(q);
             }
         }
     }
 }
+
+void quizEndTimerThread() {
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::lock_guard<std::mutex> lock(quizMutex);
+        for (int i = 0; i < allQuizzes.count; i++) {
+            int idx = (allQuizzes.head + i) % MAX_QUIZZES;
+            Quiz& q = allQuizzes.buffer[idx];
+            //std::cout << "Broj subscribera za kviz "<<q.quizId <<" je " << q.subscriberCount << std::endl;
+            if (q.status == QUIZ_RUNNING && q.subscriberCount>0  && time(nullptr) > q.quizEndTime) {
+                endQuiz(q);
+                sendQuizEndToService(q.quizId);
+            }
+        }
+    }
+}
+
 void handleSubscriber(SOCKET clientSock) {
     MsgType type;
     char payload[1024]{};
@@ -114,7 +141,7 @@ void handleSubscriber(SOCKET clientSock) {
     int quizId = -1;
     Quiz* activeQuiz = nullptr;
     int currentQuestionIdx = 0;
-
+    time_t quizDurationStart;
     // Send list of quizzes
     {
         std::lock_guard<std::mutex> lock(quizMutex);
@@ -130,7 +157,7 @@ void handleSubscriber(SOCKET clientSock) {
 
     while (true) {
         if (!recvMsg(clientSock, type, payload, sizeof(payload) - 1, len)) {
-            std::cout << "[SERVER] Subscriber disconnected\n";
+            std::cout << "\n[SERVER] Subscriber disconnected\n";
             break;
         }
         payload[len] = '\0';
@@ -160,12 +187,22 @@ void handleSubscriber(SOCKET clientSock) {
             if (!activeQuiz) break;
             currentQuestionIdx = 0;
             if (activeQuiz->questionCount > 0) {
+                
                 Question& q = activeQuiz->questions[currentQuestionIdx];
                 char msg[1024];
                 snprintf(msg, sizeof(msg), "%d|%d|%s|%s|%s|%s|%s",
                     activeQuiz->quizId, q.questionId, q.text,
                     q.options[0], q.options[1], q.options[2], q.options[3]);
                 sendMsg(clientSock, MsgType::QUIZ_QUESTION, msg, (uint32_t)strlen(msg));
+               /* quizDurationStart = std::time(nullptr); // Get current time as a time_t value
+                char timeStr[26];   // ctime_s zahtijeva buffer od bar 26 chara
+
+                ctime_s(timeStr, sizeof(timeStr), &quizDurationStart);
+                std::cout << timeStr;
+                quizDurationStart += 30; // ctime_s zahtijeva buffer od bar 26 chara
+
+                ctime_s(timeStr, sizeof(timeStr), &quizDurationStart);
+                std::cout << timeStr;*/
             }
             break;
         }

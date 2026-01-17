@@ -29,3 +29,5 @@
 **/*.log
 **/*.recipe
 **/*.FileListAbsolute.txt
+/Quiz/QuizTests/x64/Debug
+/Quiz/packages

@@ -31,7 +31,7 @@ int main() {
     subscriberMap.init();
 
     std::thread(quizTimerThread).detach();
-
+    std::thread(quizEndTimerThread).detach();
     SOCKET listenService = createListenSocket(6000);
     if (listenService == INVALID_SOCKET) return 1;
     std::thread([&]() {

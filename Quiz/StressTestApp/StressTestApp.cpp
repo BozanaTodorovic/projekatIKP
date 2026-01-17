@@ -10,16 +10,15 @@
 #include <sstream>
 
 struct Config {
-    int subscribers = 30;
+    int subscribers = 10;
     int startDelayMs = 15;
     int quizId = 1;
 
-    std::wstring subscriberExe = LR"(.\x64\Debug\SubscriberApp.exe)";
-
+    std::wstring subscriberExe ;
     bool startSystem = false;
-    std::wstring serverExe = LR"(.\x64\Debug\ServerApp.exe)";
-    std::wstring serviceExe = LR"(.\x64\Debug\ServiceApp.exe)";
-    std::wstring publisherExe = LR"(.\x64\Debug\PublisherApp.exe)";
+    std::wstring serverExe ;
+    std::wstring serviceExe ;
+    std::wstring publisherExe;
 };
 
 static void wlog(const std::wstring& s) {
@@ -38,8 +37,13 @@ static std::wstring makeCmd(const std::wstring& exe, const std::wstring& args) {
 }
 
 static std::wstring getFullPath(const std::wstring& path) {
+    wchar_t wd[MAX_PATH]{};
+    GetCurrentDirectoryW(MAX_PATH, wd);  // npr. ...\quiz\StressTestApp
+    std::wstring parentDir = std::wstring(wd) + L"\\.."; // ide jedan folder unazad (…\quiz)
+
     wchar_t out[MAX_PATH]{};
-    DWORD n = GetFullPathNameW(path.c_str(), MAX_PATH, out, nullptr);
+    DWORD n = GetFullPathNameW((parentDir + L"\\" + path).c_str(),
+        MAX_PATH, out, nullptr);
     if (n == 0 || n >= MAX_PATH) return path;
     return std::wstring(out);
 }
@@ -173,11 +177,17 @@ int main(int argc, char** argv) {
     std::ios::sync_with_stdio(false);
 
     Config cfg = parseArgs(argc, argv);
+    cfg.subscriberExe = getFullPath(L"x64\\Debug\\SubscriberApp.exe");
+    cfg.serverExe = getFullPath(L"x64\\Debug\\ServerApp.exe");
+    cfg.serviceExe = getFullPath(L"x64\\Debug\\ServiceApp.exe");
+    cfg.publisherExe = getFullPath(L"x64\\Debug\\PublisherApp.exe");
 
     wchar_t wd[MAX_PATH]{};
     GetCurrentDirectoryW(MAX_PATH, wd);
     wlog(L"WorkingDir: " + std::wstring(wd));
-    wlog(L"SubscriberExe(fullpath): " + getFullPath(cfg.subscriberExe));
+    wlog(L"SubscriberExe(fullpath): " + cfg.subscriberExe);
+    wlog(L"SubscriberExe(fullpath): " + cfg.serverExe);
+    wlog(L"SubscriberExe(fullpath): " + cfg.serviceExe);
 
     wlog(L"StressTest 1: Many subscribers in short time");
     wlog(L"N=" + std::to_wstring(cfg.subscribers) +

@@ -23,6 +23,7 @@ enum class MsgType : uint16_t {
     QUIZ_LIST = 36,
     QUIZ_RESULT=37,
     QUIZ_WAIT_RESULT = 38,
+    QUIZ_TIME_UP=39,
 
     DISCONNECT = 40,
 

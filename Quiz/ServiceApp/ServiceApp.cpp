@@ -42,14 +42,14 @@ int main() {
         }
         case MsgType::CORRECT_ANSWER:{
             //std::cout << "[SERVICE] Correct answer: " << payload << "\n";
-            std::cout << "[SERVICE] Correct answer loaded \n"<<std::endl;
+            //std::cout << "[SERVICE] Correct answer loaded \n"<<std::endl;
             addCorrectAnswer(payload);
             break;
         }case MsgType::QUIZ_ANSWER: {
-            std::cout << "[SERVICE] Received answer: " << payload << "\n";
             int subId = 0, qId = 0, answer = 0;
             int n = 0, quizId = 0;
             sscanf_s(payload, "%d|%d|%d|%d", &subId, &quizId, &qId, &answer, &n);
+            std::cout << "[SERVICE] Received answer for quiz " << quizId<< "\n";
             processQuizAnswer(quizId, payload);
             break;
         }

@@ -28,9 +28,9 @@ struct Config {
     bool startSystem = false;  // optionally start Server/Service first
 
     // Paths relative to StressTestPublisherApp.exe working directory (usually .\x64\Debug\)
-    std::wstring publisherExe = LR"(.\x64\Debug\PublisherApp.exe)";
-    std::wstring serverExe = LR"(.\x64\Debug\ServerApp.exe)";
-    std::wstring serviceExe = LR"(.\x64\Debug\ServiceApp.exe)";
+    std::wstring publisherExe;
+    std::wstring serverExe;
+    std::wstring serviceExe;
 };
 
 static void wlog(const std::wstring& s) {
@@ -49,8 +49,13 @@ static std::wstring makeCmd(const std::wstring& exe, const std::wstring& args) {
 }
 
 static std::wstring getFullPath(const std::wstring& path) {
+    wchar_t wd[MAX_PATH]{};
+    GetCurrentDirectoryW(MAX_PATH, wd);  // npr. ...\quiz\StressTestApp
+    std::wstring parentDir = std::wstring(wd) + L"\\.."; // ide jedan folder unazad (…\quiz)
+
     wchar_t out[MAX_PATH]{};
-    DWORD n = GetFullPathNameW(path.c_str(), MAX_PATH, out, nullptr);
+    DWORD n = GetFullPathNameW((parentDir + L"\\" + path).c_str(),
+        MAX_PATH, out, nullptr);
     if (n == 0 || n >= MAX_PATH) return path;
     return std::wstring(out);
 }
@@ -121,10 +126,12 @@ int main(int argc, char** argv) {
 
     wchar_t wd[MAX_PATH]{};
     GetCurrentDirectoryW(MAX_PATH, wd);
-
+    cfg.publisherExe = getFullPath(L"x64\\Debug\\PublisherApp.exe");
+    cfg.serviceExe = getFullPath(L"x64\\Debug\\ServiceApp.exe");
+    cfg.serverExe = getFullPath(L"x64\\Debug\\ServerApp.exe");
     wlog(L"StressTest 2: Publisher spam / multiple quizzes");
     wlog(L"WorkingDir: " + std::wstring(wd));
-    wlog(L"PublisherExe(fullpath): " + getFullPath(cfg.publisherExe));
+    wlog(L"PublisherExe(fullpath): " + cfg.publisherExe);
     wlog(L"N=" + std::to_wstring(cfg.publishers) + L" delayMs=" + std::to_wstring(cfg.startDelayMs));
 
     if (cfg.startSystem) {

@@ -100,10 +100,24 @@ int main(int argc, char* argv[]) {
                 std::cout << i + 1 << ") " << parts[3 + i] << "\n";
 
             int answer;
-            do {
+            while (true) {
                 std::cout << "Your answer (1-4): ";
                 std::cin >> answer;
-            } while (answer < 1 || answer > 4);
+
+                if (std::cin.fail()) {
+                    std::cin.clear();
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');//cisti bafer
+                    std::cout << "Enter a number between 1 and 4.\n";
+                    continue;
+                }
+
+                if (answer < 1 || answer > 4) {
+                    std::cout << "Number must be between 1 and 4.\n";
+                    continue;
+                }
+
+                break;
+            }
 
             int zeroBased = answer;
             char buf[32];
