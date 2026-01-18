@@ -2,11 +2,12 @@
 #include "SubscriberUtils.h"
 #include "Utils.h"
 #include "Handlers.h"
+#include "ServiceUtils.h"
 #include <cstring>
 #include <thread>
 
 //sub se na vrijeme prijavio
-TEST(Subscriber_Registration_Test, Register_Subscriber_OK) {
+TEST(ServerUnitTests, Register_Subscriber_OK) {
     int quizId = 1;int subId = 2; SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     Quiz q{};
     q.quizId = quizId;
@@ -27,7 +28,7 @@ TEST(Subscriber_Registration_Test, Register_Subscriber_OK) {
    
 }
 //kviz zapoceo,nije moguca registracija
-TEST(Subscriber_Registration_Test, Register_Subscriber_False) {
+TEST(ServerUnitTests, Register_Subscriber_False) {
     int quizId = 2;int subId = 2; SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     Quiz q{};
     q.quizId = quizId;
@@ -47,8 +48,49 @@ TEST(Subscriber_Registration_Test, Register_Subscriber_False) {
     EXPECT_FALSE(success);
    
 }
+
+//dodato vise pitanja nego sto moze
+TEST(ServerUnitTests, AddQuestion_False) {
+    Quiz q{};
+    q.quizId = 33;
+    strncpy_s(q.topic, "Topic 1", MAX_TOPIC_LEN - 1);
+    q.topic[MAX_TOPIC_LEN - 1] = '\0';
+    q.status = QUIZ_OPEN;
+    q.registrationDeadline = time(nullptr) + 10;
+    q.quizDurationSeconds = 20;
+    q.questionCount = 0;
+    q.subscriberCount = 0;
+
+    allQuizzes.push(q);
+    Quiz* quiz = allQuizzes.findById(33);
+    Question question{};
+    for (int i = 0;i <4 ;i++) {
+        question.questionId = i+1;
+        strncpy_s(question.text, "Teks pitanja"+i, MAX_QUEST_LEN - 1);
+        strncpy_s(question.options[0], "1", MAX_OPTION_LEN - 1);
+        strncpy_s(question.options[1], "2", MAX_OPTION_LEN - 1);
+        strncpy_s(question.options[2], "3", MAX_OPTION_LEN - 1);
+        strncpy_s(question.options[3], "4", MAX_OPTION_LEN - 1);
+        question.correctOption = 1;
+        addQuestionToQuiz(33, question);
+    }
+    question.questionId = 5;
+    strncpy_s(question.text, "Teks pitanja 5", MAX_QUEST_LEN - 1);
+    strncpy_s(question.options[0], "1", MAX_OPTION_LEN - 1);
+    strncpy_s(question.options[1], "2", MAX_OPTION_LEN - 1);
+    strncpy_s(question.options[2], "3", MAX_OPTION_LEN - 1);
+    strncpy_s(question.options[3], "4", MAX_OPTION_LEN - 1);
+    question.correctOption = 1;
+
+    bool success = addQuestionToQuiz(33, question);
+
+    EXPECT_EQ(quiz->questionCount,4);
+    EXPECT_FALSE(success);
+}
+
+
 //uspjesno dodati kvizovi
-TEST(Publisher_Test, Create_Quiz_OK) {
+TEST(PublisherUnitTests, Create_Quiz_OK) {
     Quizes mojNiz[QUESTIONS_COUNT];
 
     setQuizes(mojNiz);
@@ -60,7 +102,7 @@ TEST(Publisher_Test, Create_Quiz_OK) {
 
 
 //socket nije povezan na server,samo je kreiran 
-TEST(Publisher_Test,False_Sending_Question) {
+TEST(PublisherUnitTests,False_Sending_Question) {
     SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); int quizId = 1;
     QuestionToSend q;
     q.questionId = 3;
@@ -130,15 +172,12 @@ TEST(SendQuestionLogic_True,ValidSendQuestion) {
 }
 
 // Testiramo da li funkcija ispravno deli poruku sa separatorom '|'
-TEST(SubscriberUtilsTests, SplitQuizMessage_ValidInput) {
-    // Arrange (Priprema)
+TEST(SubscriberUnitTests, SplitQuizMessage_ValidInput) {
     const char* msg = "Q1|1|Glavni grad Srbije?|Beograd|Novi Sad|Nis|Kragujevac";
     char parts[7][256];
 
-    // Act (Izvršavanje)
     splitQuizMessage(msg, parts);
 
-    // Assert (Provera rezultata)
     EXPECT_STREQ(parts[0], "Q1");
     EXPECT_STREQ(parts[1], "1");
     EXPECT_STREQ(parts[2], "Glavni grad Srbije?");
@@ -149,11 +188,11 @@ TEST(SubscriberUtilsTests, SplitQuizMessage_ValidInput) {
 }
 
 // Testiramo šta se dešava ako poruka ima manje delova
-TEST(SubscriberUtilsTests, SplitQuizMessage_PartialInput) {
+TEST(SubscriberUnitTests, SplitQuizMessage_PartialInput) {
     const char* msg = "Q2|202|Neko pitanje";
     char parts[7][256];
 
-    // Inicijalizujemo matricu nulama da budemo sigurni šta je unutra
+    //da budemo sigurni da je nesto ubaceno
     for (int i = 0; i < 7; i++) parts[i][0] = '\0';
 
     splitQuizMessage(msg, parts);
@@ -161,4 +200,26 @@ TEST(SubscriberUtilsTests, SplitQuizMessage_PartialInput) {
     EXPECT_STREQ(parts[0], "Q2");
     EXPECT_STREQ(parts[1], "202");
     EXPECT_STREQ(parts[2], "Neko pitanje");
+}
+//ako se posalje prazna poruka
+TEST(ServiceUnitTests, AddCorrectAnswer_EmptyPayload) {
+    const char* msg = "";
+
+    QuizResultNode* result = getOrCreateQuiz(1);
+    addCorrectAnswer(msg);
+
+    EXPECT_EQ(result->correctAnswers->size, 0);
+
+}
+
+//da li se tacno pitanje ispravno doda u buffer
+TEST(ServiceUnitTests, AddCorrectAnswer_Success) {
+    const char* msg = "1|1|1";
+    
+    QuizResultNode* result = getOrCreateQuiz(1);
+    addCorrectAnswer(msg);
+
+    EXPECT_EQ(result->correctAnswers->buffer->questionId,1);
+    EXPECT_NE(result->correctAnswers->size, 0);
+
 }
