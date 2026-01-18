@@ -86,14 +86,14 @@ bool addQuestionToQuiz(int quizId, const Question& q) {
 
 void startQuiz(Quiz& q) {
     q.status = QUIZ_RUNNING;
-    std::cout <<"\n[SERVER] Quiz " << q.quizId << " STARTED";
+    std::cout <<"\n[SERVER] Quiz " << q.quizId << " STARTED" <<std::endl;
     for (int i = 0; i < q.subscriberCount; i++) {
         sendMsg(q.subscribers[i].sock, MsgType::QUIZ_START, nullptr, 0);
     }
 }
 void endQuiz(Quiz& q) {
     q.status = QUIZ_FINISHED;
-    std::cout << "[SERVER] Quiz " << q.quizId << " ENDED\n\n" << std::endl;
+    std::cout << "\n[SERVER] Quiz " << q.quizId << " ENDED\n" << std::endl;
 
     for (int i = 0; i < q.subscriberCount; i++) {
         sendMsg(q.subscribers[i].sock, MsgType::QUIZ_WAIT_RESULT, nullptr, 0);
@@ -194,15 +194,6 @@ void handleSubscriber(SOCKET clientSock) {
                     activeQuiz->quizId, q.questionId, q.text,
                     q.options[0], q.options[1], q.options[2], q.options[3]);
                 sendMsg(clientSock, MsgType::QUIZ_QUESTION, msg, (uint32_t)strlen(msg));
-               /* quizDurationStart = std::time(nullptr); // Get current time as a time_t value
-                char timeStr[26];   // ctime_s zahtijeva buffer od bar 26 chara
-
-                ctime_s(timeStr, sizeof(timeStr), &quizDurationStart);
-                std::cout << timeStr;
-                quizDurationStart += 30; // ctime_s zahtijeva buffer od bar 26 chara
-
-                ctime_s(timeStr, sizeof(timeStr), &quizDurationStart);
-                std::cout << timeStr;*/
             }
             break;
         }
@@ -235,7 +226,7 @@ void handleSubscriber(SOCKET clientSock) {
             else {
                 sendMsg(clientSock, MsgType::QUIZ_WAIT_RESULT, nullptr, 0);
                 //std::cout << "Quiz id je " << quizId << std::endl;
-                sendQuizEndToService(quizId);
+                //sendQuizEndToService(quizId);
             }
             break;
         }
@@ -332,7 +323,6 @@ void handleService(SOCKET serviceSock) {
             if (sub) {
                 char msg[128];
                 snprintf(msg, sizeof(msg), "%d|%d|%d", subId, quizId, score);
-                std::cout << msg << std::endl;
                 sendMsg(sub->sock, MsgType::QUIZ_RESULT, msg, (uint32_t)strlen(msg));
                 sendMsg(sub->sock, MsgType::QUIZ_END, nullptr, 0);
             }

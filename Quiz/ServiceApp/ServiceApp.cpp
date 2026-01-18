@@ -4,6 +4,7 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 int main() {
+    std::cout << "====================  SERVICE  =====================\n\n" << std::endl;
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) return 1;
 
@@ -37,7 +38,7 @@ int main() {
             break;
         }
         case MsgType::QUIZ_START: {
-            std::cout << "[SERVICE] Quiz started!\n";
+            std::cout << "\n[SERVICE] Quiz started!\n";
             break;
         }
         case MsgType::CORRECT_ANSWER:{
@@ -49,7 +50,7 @@ int main() {
             int subId = 0, qId = 0, answer = 0;
             int n = 0, quizId = 0;
             sscanf_s(payload, "%d|%d|%d|%d", &subId, &quizId, &qId, &answer, &n);
-            std::cout << "[SERVICE] Received answer for quiz " << quizId<< "\n";
+            std::cout << "\n[SERVICE] Received answer for quiz " << quizId<< "\n";
             processQuizAnswer(quizId, payload);
             break;
         }

@@ -8,15 +8,15 @@ struct SubResult {
     SubResult* next;
 };
 
-class HashMap {
+class HashMapService {
 public:
     SubResult** buckets;
     size_t capacity;
 
     size_t hash(int subscriberId);
 
-    HashMap(size_t cap);
-    ~HashMap();
+    HashMapService(size_t cap);
+    ~HashMapService();
 
     void addOrUpdate(int subscriberId, int points);
     void printAll();
@@ -24,7 +24,7 @@ public:
 
 struct QuizResultNode {
     int quizId;
-    HashMap* subResults;
+    HashMapService* subResults;
     RingBuffer* correctAnswers;
     QuizResultNode* next;
 };

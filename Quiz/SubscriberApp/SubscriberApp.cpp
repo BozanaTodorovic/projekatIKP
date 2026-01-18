@@ -20,6 +20,7 @@ int main(int argc, char* argv[]) {
     if(argc>1){
         subId = std::atoi(argv[1]);
     }
+    std::cout<<"====================  SUBSCRIBER "<<subId<<"  =====================\n\n"<<std::endl;
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
         std::cout << "WSAStartup failed\n";
@@ -80,7 +81,7 @@ int main(int argc, char* argv[]) {
     }
 
 
-    std::cout << "[SUBSCRIBER] Waiting for quiz to start...\n";
+    std::cout << "\n[SUBSCRIBER] Waiting for quiz to start...\n";
 
     bool quizRunning = true;
     while (quizRunning) {
@@ -95,7 +96,7 @@ int main(int argc, char* argv[]) {
             char parts[7][256]{};
             splitQuizMessage(buf, parts);
 
-            std::cout << parts[2] << "\n";
+            std::cout << "\n" <<parts[2] << "\n";
             for (int i = 0; i < 4; i++)
                 std::cout << i + 1 << ") " << parts[3 + i] << "\n";
 
@@ -130,7 +131,7 @@ int main(int argc, char* argv[]) {
             //break;
         }
         else if (type == MsgType::QUIZ_START) {
-            std::cout << "[SUBSCRIBER] Quiz started!\n";
+            std::cout << "[SUBSCRIBER] Quiz started!\n"<<std::endl;
             std::string ans = "Quiz start";
             sendMsg(sock,
                 MsgType::QUIZ_START,
@@ -144,10 +145,10 @@ int main(int argc, char* argv[]) {
             std::cout << "Your result for quiz " << quizId << " is : " << score << std::endl;
         }
         else if (type == MsgType::QUIZ_WAIT_RESULT) {
-            std::cout << "[SUBSCRIBER] Wait result...\n";
+            std::cout << "\n[SUBSCRIBER] Wait result...\n";
         }
         else if (type == MsgType::QUIZ_END) {
-            std::cout << "[SUBSCRIBER] Quiz ended!\n";
+            std::cout << "\n[SUBSCRIBER] Quiz ended!\n";
             quizRunning = false; 
         }
     }

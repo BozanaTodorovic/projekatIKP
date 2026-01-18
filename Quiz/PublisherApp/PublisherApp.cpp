@@ -5,6 +5,7 @@
 
 
 int main() {
+    std::cout << "====================  PUBLISHER  =====================\n\n" << std::endl;
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
         std::cout << "WSAStartup failed\n";
@@ -37,7 +38,7 @@ int main() {
 
         char payload[256]{};
 
-        sprintf_s(payload, sizeof(payload), "%d %d %s", 20, 30, q[i].topic);
+        sprintf_s(payload, sizeof(payload), "%d %d %s", 20, 20, q[i].topic);
         sendMsg(sock, MsgType::CREATE_QUIZ, payload, (uint32_t)strlen(payload));
         MsgType type;
         char buf[256]{};
@@ -57,7 +58,7 @@ int main() {
         }
     }
 
-    std::cout << "Press ENTER to exit...\n";
+    std::cout << "\nPress ENTER to exit...\n";
     std::cin.get();
 
     closesocket(sock);

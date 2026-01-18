@@ -1,18 +1,18 @@
 #pragma once
-#include "HashMap.h"
+#include "HashMapService.h"
 
 // ===================== PRIVATE =====================
-size_t HashMap::hash(int subscriberId) {
+size_t HashMapService::hash(int subscriberId) {
     return subscriberId % capacity;
 }
 
 // ===================== PUBLIC =====================
-HashMap::HashMap(size_t cap) : capacity(cap) {
+HashMapService::HashMapService(size_t cap) : capacity(cap) {
     buckets = new SubResult * [cap];
     for (size_t i = 0; i < cap; i++) buckets[i] = nullptr;
 }
 
-HashMap::~HashMap() {
+HashMapService::~HashMapService() {
     for (size_t i = 0; i < capacity; i++) {
         SubResult* curr = buckets[i];
         while (curr) {
@@ -24,7 +24,7 @@ HashMap::~HashMap() {
     delete[] buckets;
 }
 
-void HashMap::addOrUpdate(int subscriberId, int points) {
+void HashMapService::addOrUpdate(int subscriberId, int points) {
     size_t idx = hash(subscriberId);
     SubResult* curr = buckets[idx];
     while (curr) {
@@ -38,11 +38,11 @@ void HashMap::addOrUpdate(int subscriberId, int points) {
     buckets[idx] = newSub;
 }
 
-void HashMap::printAll() {
+void HashMapService::printAll() {
     for (size_t i = 0; i < capacity; i++) {
         SubResult* curr = buckets[i];
         while (curr) {
-            std::cout << "Sub " << curr->subscriberId << " -> " << curr->score << " pts\n";
+            std::cout << "Sub " << curr->subscriberId << " -> " << curr->score << " pts\n" << std::endl;
             curr = curr->next;
         }
     }

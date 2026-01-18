@@ -4,7 +4,7 @@
 #include <cstring>
 #include "../Common/protocol.h"
 #include "../Common/net.h"
-#include "HashMap.h"
+#include "HashMapService.h"
 
 QuizResultNode* getOrCreateQuiz(int quizId);
 void addCorrectAnswer(const char* payload);

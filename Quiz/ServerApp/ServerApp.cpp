@@ -26,6 +26,7 @@ SOCKET createListenSocket(uint16_t port) {
 }
 
 int main() {
+    std::cout << "====================  SERVER  =====================\n\n" << std::endl;
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) return 1;
     subscriberMap.init();

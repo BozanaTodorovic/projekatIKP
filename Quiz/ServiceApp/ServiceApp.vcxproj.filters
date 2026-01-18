@@ -18,7 +18,7 @@
     <ClCompile Include="ServiceApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HashMap.cpp">
+    <ClCompile Include="HashMapService.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ServiceUtils.cpp">
@@ -29,7 +29,7 @@
     <ClInclude Include="CorrectAnswerStruct.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HashMap.h">
+    <ClInclude Include="HashMapService.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ServiceUtils.h">
