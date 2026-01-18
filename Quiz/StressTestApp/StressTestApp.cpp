@@ -60,80 +60,80 @@ static std::wstring winErrMsg(DWORD err) {
     return msg;
 }
 
-static bool startProcessWithInjectedStdin(
-    const std::wstring& exePath,
-    const std::wstring& args,
-    const std::string& stdinText,
-    PROCESS_INFORMATION& outPi
-) {
-    SECURITY_ATTRIBUTES sa{};
-    sa.nLength = sizeof(sa);
-    sa.bInheritHandle = TRUE;
-    sa.lpSecurityDescriptor = NULL;
+//static bool startProcessWithInjectedStdin(
+//    const std::wstring& exePath,
+//    const std::wstring& args,
+//    const std::string& stdinText,
+//    PROCESS_INFORMATION& outPi
+//) {
+//    SECURITY_ATTRIBUTES sa{};
+//    sa.nLength = sizeof(sa);
+//    sa.bInheritHandle = TRUE;
+//    sa.lpSecurityDescriptor = NULL;
+//
+//    HANDLE hRead = NULL, hWrite = NULL;
+//    if (!CreatePipe(&hRead, &hWrite, &sa, 0)) {
+//        DWORD err = GetLastError();
+//        wlog(L"CreatePipe failed. err=" + std::to_wstring(err) + L" msg=" + winErrMsg(err));
+//        return false;
+//    }
+//
+//    SetHandleInformation(hWrite, HANDLE_FLAG_INHERIT, 0);
+//
+//    STARTUPINFOW si{};
+//    si.cb = sizeof(si);
+//    si.dwFlags = STARTF_USESTDHANDLES;
+//    si.hStdInput = hRead;
+//    si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+//    si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+//
+//    PROCESS_INFORMATION pi{};
+//
+//    std::wstring cmd = makeCmd(exePath, args);
+//    std::vector<wchar_t> cmdBuf(cmd.begin(), cmd.end());
+//    cmdBuf.push_back(L'\0');
+//
+//    BOOL ok = CreateProcessW(
+//        NULL,
+//        cmdBuf.data(),      // mutable LPWSTR
+//        NULL,
+//        NULL,
+//        TRUE,
+//        CREATE_NEW_CONSOLE,
+//        NULL,
+//        NULL,
+//        &si,
+//        &pi
+//    );
+//
+//    CloseHandle(hRead);
+//
+//    if (!ok) {
+//        DWORD err = GetLastError();
+//        wlog(L"CreateProcess(subscriber) failed. err=" + std::to_wstring(err) + L" msg=" + winErrMsg(err));
+//        wlog(L"Tried exe(fullpath): " + getFullPath(exePath));
+//        CloseHandle(hWrite);
+//        return false;
+//    }
+//
+//    DWORD written = 0;
+//    if (!WriteFile(hWrite, stdinText.c_str(), (DWORD)stdinText.size(), &written, NULL)) {
+//        DWORD err = GetLastError();
+//        wlog(L"WriteFile(stdin) failed. err=" + std::to_wstring(err) + L" msg=" + winErrMsg(err));
+//    }
+//
+//    CloseHandle(hWrite);
+//
+//    outPi = pi;
+//    return true;
+//}
 
-    HANDLE hRead = NULL, hWrite = NULL;
-    if (!CreatePipe(&hRead, &hWrite, &sa, 0)) {
-        DWORD err = GetLastError();
-        wlog(L"CreatePipe failed. err=" + std::to_wstring(err) + L" msg=" + winErrMsg(err));
-        return false;
-    }
-
-    SetHandleInformation(hWrite, HANDLE_FLAG_INHERIT, 0);
-
+static bool startProcessNewConsole(const std::wstring& exePath, const std::wstring& args, PROCESS_INFORMATION* outPiOpt = nullptr) {
     STARTUPINFOW si{};
     si.cb = sizeof(si);
-    si.dwFlags = STARTF_USESTDHANDLES;
-    si.hStdInput = hRead;
-    si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
-
     PROCESS_INFORMATION pi{};
 
     std::wstring cmd = makeCmd(exePath, args);
-    std::vector<wchar_t> cmdBuf(cmd.begin(), cmd.end());
-    cmdBuf.push_back(L'\0');
-
-    BOOL ok = CreateProcessW(
-        NULL,
-        cmdBuf.data(),      // mutable LPWSTR
-        NULL,
-        NULL,
-        TRUE,
-        CREATE_NEW_CONSOLE,
-        NULL,
-        NULL,
-        &si,
-        &pi
-    );
-
-    CloseHandle(hRead);
-
-    if (!ok) {
-        DWORD err = GetLastError();
-        wlog(L"CreateProcess(subscriber) failed. err=" + std::to_wstring(err) + L" msg=" + winErrMsg(err));
-        wlog(L"Tried exe(fullpath): " + getFullPath(exePath));
-        CloseHandle(hWrite);
-        return false;
-    }
-
-    DWORD written = 0;
-    if (!WriteFile(hWrite, stdinText.c_str(), (DWORD)stdinText.size(), &written, NULL)) {
-        DWORD err = GetLastError();
-        wlog(L"WriteFile(stdin) failed. err=" + std::to_wstring(err) + L" msg=" + winErrMsg(err));
-    }
-
-    CloseHandle(hWrite);
-
-    outPi = pi;
-    return true;
-}
-
-static bool startProcessNewConsole(const std::wstring& exePath) {
-    STARTUPINFOW si{};
-    si.cb = sizeof(si);
-    PROCESS_INFORMATION pi{};
-
-    std::wstring cmd = makeCmd(exePath, L"");
     std::vector<wchar_t> cmdBuf(cmd.begin(), cmd.end());
     cmdBuf.push_back(L'\0');
 
@@ -149,16 +149,21 @@ static bool startProcessNewConsole(const std::wstring& exePath) {
 
     if (!ok) {
         DWORD err = GetLastError();
-        wlog(L"CreateProcess(system) failed. err=" + std::to_wstring(err) + L" msg=" + winErrMsg(err));
+        wlog(L"CreateProcess failed. err=" + std::to_wstring(err) + L" msg=" + winErrMsg(err));
         wlog(L"Tried exe(fullpath): " + getFullPath(exePath));
         return false;
     }
 
-    CloseHandle(pi.hThread);
-    CloseHandle(pi.hProcess);
+    if (outPiOpt) {
+        *outPiOpt = pi; // caller will close handles
+    }
+    else {
+        // We don't need the handles here; close immediately
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+    }
     return true;
 }
-
 static Config parseArgs(int argc, char** argv) {
     Config cfg;
     for (int i = 1; i < argc; i++) {
@@ -196,11 +201,11 @@ int main(int argc, char** argv) {
 
     if (cfg.startSystem) {
         wlog(L"Starting Server/Service/Publisher...");
-        if (!startProcessNewConsole(cfg.serverExe))    wlog(L"WARN: failed to start Server.");
+        if (!startProcessNewConsole(cfg.serverExe, L""))    wlog(L"WARN: failed to start Server.");
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        if (!startProcessNewConsole(cfg.serviceExe))   wlog(L"WARN: failed to start Service.");
+        if (!startProcessNewConsole(cfg.serviceExe, L""))   wlog(L"WARN: failed to start Service.");
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        if (!startProcessNewConsole(cfg.publisherExe)) wlog(L"WARN: failed to start Publisher.");
+        if (!startProcessNewConsole(cfg.publisherExe, L"")) wlog(L"WARN: failed to start Publisher.");
         std::this_thread::sleep_for(std::chrono::milliseconds(800));
     }
     else {
@@ -217,7 +222,7 @@ int main(int argc, char** argv) {
         std::wstring args = std::to_wstring(i);
 
         PROCESS_INFORMATION pi{};
-        if (startProcessWithInjectedStdin(cfg.subscriberExe, args, stdinText, pi)) {
+        if (startProcessNewConsole(cfg.subscriberExe, args, &pi)) {
             okCount++;
             procs.push_back(pi);
         }

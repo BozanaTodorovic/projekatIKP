@@ -58,9 +58,23 @@ int main(int argc, char* argv[]) {
             std::cout << payload << "\n";
 
             int selectedQuiz;
-            std::cout << "Enter quiz ID to join: ";
-            std::cin >> selectedQuiz;
+            while (true) {
+                std::cout << "Enter quiz ID to join: ";
+                std::cin >> selectedQuiz;
+                if (std::cin.fail()) {
+                    std::cin.clear();
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');//cisti bafer
+                    std::cout << "Please enter one of the quiz number.\n";
+                    continue;
+                }
 
+                if (selectedQuiz < 1) {
+                    std::cout << "Number must be greather than 0.\n";
+                    continue;
+                }
+
+                break;
+            }
             char buf[32];
             int subscriberId =subId;
             sprintf_s(buf, "%d %d", selectedQuiz, subscriberId);
@@ -78,6 +92,13 @@ int main(int argc, char* argv[]) {
     if (recvMsg(sock, type1, buf, sizeof(buf) - 1, len1)) {
         buf[len1] = '\0';
         std::cout << "Got msg type = " << (uint16_t)type1 << " payload=" << buf << "\n";
+        if (int(type1) == 22) {
+            std::cout << "You are late on registration!Press ENTER to exit...\n";
+            //ucita nam enter iz bafera pa onda prodje cin.get i ugasi window
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cin.get();
+            return 0;
+        }
     }
 
 
