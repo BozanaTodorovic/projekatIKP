@@ -23,8 +23,8 @@
 #include <sstream>
 
 struct Config {
-    int publishers = 8;        // N instances
-    int startDelayMs = 20;     // delay between spawns
+    int publishers = 60;        // N instances
+    int startDelayMs = 50;     // delay between spawns
     bool startSystem = false;  // optionally start Server/Service first
 
     // Paths relative to StressTestPublisherApp.exe working directory (usually .\x64\Debug\)
@@ -162,18 +162,26 @@ int main(int argc, char** argv) {
 
         if (cfg.startDelayMs > 0)
             std::this_thread::sleep_for(std::chrono::milliseconds(cfg.startDelayMs));
-    }
 
+        Sleep(1000);
+    }
     wlog(L"Spawned publishers: " + std::to_wstring(okCount) + L"/" + std::to_wstring(cfg.publishers));
     wlog(L"Now check Server console: it should print multiple 'Quiz X created'.");
     wlog(L"Take screenshots: Server + 2-3 Publisher consoles.");
     wlog(L"Press ENTER to exit (children keep running).");
+    //Sleep(5000);
+    //for (int i = 1; i <=100; i++) {
+    //    // If your PublisherApp ignores args, that's fine—each instance still sends CREATE_QUIZ.
 
-    std::wstring dummy;
-    std::getline(std::wcin, dummy);
+    //    TerminateProcess(array[i].hProcess, 0);
+    //}
+
+    /*std::wstring dummy;
+    std::getline(std::wcin, dummy);*/
 
     // Close only handles (do not terminate publisher processes)
     for (auto& pi : procs) {
+        TerminateProcess(pi.hProcess, 0);
         CloseHandle(pi.hThread);
         CloseHandle(pi.hProcess);
     }

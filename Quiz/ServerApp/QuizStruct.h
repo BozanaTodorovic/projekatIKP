@@ -7,7 +7,7 @@
 #define MAX_OPTION_LEN 128
 #define MAX_QUESTIONS 4 
 #define MAX_SUBSCRIBERS 128
-#define MAX_QUIZZES 64
+#define MAX_QUIZZES 164
 
 enum QuizStatus {
     QUIZ_OPEN,

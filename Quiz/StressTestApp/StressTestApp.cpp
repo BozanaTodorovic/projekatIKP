@@ -10,8 +10,8 @@
 #include <sstream>
 
 struct Config {
-    int subscribers = 10;
-    int startDelayMs = 15;
+    int subscribers = 60;
+    int startDelayMs = 30;
     int quizId = 1;
 
     std::wstring subscriberExe ;
@@ -229,16 +229,19 @@ int main(int argc, char** argv) {
 
         if (cfg.startDelayMs > 0)
             std::this_thread::sleep_for(std::chrono::milliseconds(cfg.startDelayMs));
+
+        Sleep(1000);
     }
 
     wlog(L"Spawned subscribers: " + std::to_wstring(okCount) + L"/" + std::to_wstring(cfg.subscribers));
     wlog(L"Take screenshots now: Server + (optional) Service + 1-2 Subscribers.");
     wlog(L"Press ENTER to exit (children keep running).");
 
-    std::wstring dummy;
-    std::getline(std::wcin, dummy);
+    /*std::wstring dummy;
+    std::getline(std::wcin, dummy);*/
 
     for (auto& pi : procs) {
+        TerminateProcess(pi.hProcess,0);
         CloseHandle(pi.hThread);
         CloseHandle(pi.hProcess);
     }

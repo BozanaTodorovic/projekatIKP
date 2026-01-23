@@ -7,6 +7,7 @@ SOCKET g_serviceSock = INVALID_SOCKET;
 std::mutex serviceSockMutex;
 QuizBuffer allQuizzes;
 std::mutex quizMutex;
+std::mutex quizIdMutex;
 static int quizId = 1;
 void sendAnswerToService(int subscriberId, int quizId, int questionId, int answerIndex) {
     std::lock_guard<std::mutex> lock(serviceSockMutex);
@@ -31,6 +32,12 @@ void sendCorrectAnswerToService(int quizId, int questionId, int correctAnswer) {
     char msg[64];
     snprintf(msg, sizeof(msg), "%d|%d|%d", quizId, questionId, correctAnswer);
     sendMsg(g_serviceSock, MsgType::CORRECT_ANSWER, msg, (uint32_t)strlen(msg));
+}
+int createQuizMutex(int regSec,int durSec, char topic[128]) {
+    std::lock_guard<std::mutex> lock(quizIdMutex);
+    int broj=quizId++;
+    createQuiz(broj, regSec, durSec, topic);
+    return broj;
 }
 
 // ==================== QUIZ LOGIKA ====================
@@ -262,11 +269,12 @@ void handlePublisher(SOCKET pubSock) {
             int  regSec, durSec;
             char topic[128]{};
             if (sscanf_s(payload, "%d %d %127s", &regSec, &durSec, topic, (unsigned)_countof(topic)) >= 3) {
-                createQuiz(quizId, regSec, durSec, topic);
+                int id=createQuizMutex(regSec, durSec, topic);
+                /*createQuiz(quizId, regSec, durSec, topic);*/
                 char msg[128];
-                snprintf(msg, sizeof(msg), "%d", quizId);
+                snprintf(msg, sizeof(msg), "%d", id);
                 sendMsg(pubSock, MsgType::CREATE_QUIZ_ACK, msg, (uint32_t)strlen(msg));
-                quizId++;
+                
             }
             else sendMsg(pubSock, MsgType::CREATE_QUIZ_ACK, "BAD_FORMAT", 10);
             break;
