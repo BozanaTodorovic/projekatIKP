@@ -21,6 +21,11 @@ To start the quiz with multiple subscribers and publishers,follow instructions b
 
 The quiz with multiple subscribers and publishers will start
 
+
+## Documentation
+- [Dokumentacija (PDF)](Quiz/Dokumentacija%20pub-sub%203.pdf)
+
+
 ## Contributors
   - Aleksa Arsenić (github : [aleksa1508](https://github.com/aleksa1508))
   - Božana Todorović (github : [BozanaTodorovic](https://github.com/BozanaTodorovic))
