@@ -38,7 +38,7 @@ int main() {
 
         char payload[256]{};
 
-        sprintf_s(payload, sizeof(payload), "%d %d %s", 20, 20, q[0].topic);
+        sprintf_s(payload, sizeof(payload), "%d %d %s", 20, 20, q[i].topic);
         sendMsg(sock, MsgType::CREATE_QUIZ, payload, (uint32_t)strlen(payload));
         MsgType type;
         char buf[256]{};

@@ -13,24 +13,6 @@ QuizResultNode* getOrCreateQuiz(int quizId) {
     return newQuiz;
 }
 
-//void addCorrectAnswer(const char* payload) {
-//    const char* line = payload;
-//    if (payload == "") {
-//        return;
-//    }
-//    while (*line) {
-//        int quizId = 0, qId = 0, correctAnswer = 0;
-//        int n = 0;
-//        sscanf_s(line, "%d|%d|%d%n", &quizId, &qId, &correctAnswer, &n);
-//        line += n;
-//        if (*line == '\n') line++;
-//        QuizResultNode* quiz = getOrCreateQuiz(quizId);
-//        CorrectAnswer ca{ qId, correctAnswer };
-//        quiz->correctAnswers->push(ca);
-//        //std::cout << "Dodat tacan odgovor " << correctAnswer << " for qID " << qId << ":\n";
-//
-//    }
-//}
 void addCorrectAnswer(const char* payload) {
     int quizId = 0, qId = 0, correctAnswer = 0;
 
@@ -70,25 +52,6 @@ void processQuizAnswer(int quizId, const char* payload) {
 
     quiz->subResults->printAll();
 }
-//void processQuizAnswer(int quizId, const char* payload) {
-//    QuizResultNode* quiz = getOrCreateQuiz(quizId);
-//    const char* line = payload;
-//    int subId = 0, qId = 0, answer = 0;
-//    int n = 0;
-//    int correctOption; int points = 0;
-//    while (*line) {
-//        sscanf_s(line, "%d|%d|%d|%d%n", &subId, &quizId, &qId, &answer, &n);
-//        std::cout << subId << " payload: " << payload << std::endl;
-//        if (quiz->correctAnswers->get(qId, correctOption)) {
-//            if (answer == correctOption) points = 2;
-//        }
-//        std::cout << "Question points for question ID is " << qId << "\n";
-//        quiz->subResults->addOrUpdate(subId, points);
-//        line += n; if (*line == '\n') line++;
-//    }
-//    std::cout << "[QUIZ " << quizId << "]->Updated scores for subID " << subId << " is " << points << ":\n";
-//    quiz->subResults->printAll();
-//}
 
 void sendQuizResult(SOCKET sock, int quizId) {
     QuizResultNode* quiz = allQuizzes;

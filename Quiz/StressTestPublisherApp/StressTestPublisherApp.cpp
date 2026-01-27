@@ -24,7 +24,7 @@
 
 struct Config {
     int publishers = 60;        // N instances
-    int startDelayMs = 50;     // delay between spawns
+    int startDelayMs = 1000;     // delay between spawns
     bool startSystem = false;  // optionally start Server/Service first
 
     // Paths relative to StressTestPublisherApp.exe working directory (usually .\x64\Debug\)
@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
         if (cfg.startDelayMs > 0)
             std::this_thread::sleep_for(std::chrono::milliseconds(cfg.startDelayMs));
 
-        Sleep(1000);
+       // Sleep(1000);
     }
     wlog(L"Spawned publishers: " + std::to_wstring(okCount) + L"/" + std::to_wstring(cfg.publishers));
     wlog(L"Now check Server console: it should print multiple 'Quiz X created'.");

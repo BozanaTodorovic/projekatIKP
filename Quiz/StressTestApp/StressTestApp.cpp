@@ -11,7 +11,7 @@
 
 struct Config {
     int subscribers = 60;
-    int startDelayMs = 30;
+    int startDelayMs = 1000;
     int quizId = 1;
 
     std::wstring subscriberExe ;
@@ -230,7 +230,7 @@ int main(int argc, char** argv) {
         if (cfg.startDelayMs > 0)
             std::this_thread::sleep_for(std::chrono::milliseconds(cfg.startDelayMs));
 
-        Sleep(1000);
+       //Sleep(1000);
     }
 
     wlog(L"Spawned subscribers: " + std::to_wstring(okCount) + L"/" + std::to_wstring(cfg.subscribers));
