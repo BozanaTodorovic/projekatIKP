@@ -1,17 +1,4 @@
-﻿// StressTestPublisherApp.cpp
-// Stress test 2: "Publisher spam / multiple quizzes in parallel"
-// Goal: start many PublisherApp instances quickly and verify server handles concurrent CREATE_QUIZ correctly.
-//
-// Usage examples (set in Project -> Properties -> Debugging -> Command Arguments):
-//   --n 8 --delay 20
-//   --n 10 --delay 5
-//
-// Notes:
-// - This app does NOT modify your existing project code.
-// - It simply spawns multiple PublisherApp.exe processes (new consoles).
-// - Make sure ServerApp and ServiceApp are running before starting this test,
-//   unless you run with --start-system (optional).
-
+﻿// Stress test 2: "Publisher spam / multiple quizzes in parallel"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -149,9 +136,7 @@ int main(int argc, char** argv) {
     std::vector<PROCESS_INFORMATION> procs;
     procs.reserve(cfg.publishers);
 
-    // Spawn many publishers fast. If PublisherApp supports args, you can pass an id, but it's optional.
     for (int i = 1; i <= cfg.publishers; i++) {
-        // If your PublisherApp ignores args, that's fine—each instance still sends CREATE_QUIZ.
         std::wstring args = std::to_wstring(i);
 
         PROCESS_INFORMATION pi{};

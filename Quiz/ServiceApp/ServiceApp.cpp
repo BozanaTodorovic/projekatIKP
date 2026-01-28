@@ -9,15 +9,22 @@ int main() {
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) return 1;
 
     SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sock == INVALID_SOCKET) return 1;
+    if (sock == INVALID_SOCKET) {
+       WSACleanup();
+       return 1;
+    }
+
 
     sockaddr_in server{};
     server.sin_family = AF_INET;
     server.sin_port = htons(6000); // port servera
     server.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    if (connect(sock, (sockaddr*)&server, sizeof(server)) == SOCKET_ERROR) return 1;
-
+    if (connect(sock, (sockaddr*)&server, sizeof(server)) == SOCKET_ERROR) {
+        closesocket(sock);
+        WSACleanup();
+        return 1;
+    }
     std::cout << "Service connected to server!\n";
 
     

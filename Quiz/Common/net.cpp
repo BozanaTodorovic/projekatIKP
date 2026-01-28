@@ -24,7 +24,6 @@ bool recvAll(SOCKET s, char* data, int len) {
 }
 
 bool sendFrame(SOCKET s, const char* payload, uint32_t length) {
-    // dužina ide u network byte order
     uint32_t netLen = htonl(length);
     if (!sendAll(s, (const char*)&netLen, sizeof(netLen))) return false;
     if (length > 0) {
@@ -47,10 +46,8 @@ bool recvFrame(SOCKET s, char* outBuf, uint32_t maxBuf, uint32_t& outLen) {
 }
 
 bool sendMsg(SOCKET s, MsgType type, const char* payload, uint32_t payloadLen) {
-    // frame payload = [type(uint16)][payload bytes...]
     uint32_t totalLen = (uint32_t)sizeof(uint16_t) + payloadLen;
 
-    // za MVP držimo buffer ogranièen (kasnije pravimo svoj ByteBuffer)
     char temp[1024];
     if (totalLen > sizeof(temp)) return false;
 
@@ -66,13 +63,7 @@ bool sendMsg(SOCKET s, MsgType type, const char* payload, uint32_t payloadLen) {
     return sendFrame(s, temp, totalLen);
 }
 
-bool recvMsg(
-    SOCKET s,
-    MsgType& outType,
-    char* outPayload,
-    uint32_t maxBuf,
-    uint32_t& outPayloadLen
-) {
+bool recvMsg(SOCKET s,MsgType& outType,char* outPayload,uint32_t maxBuf,uint32_t& outPayloadLen) {
     char temp[1024];
     uint32_t len = 0;
 
